@@ -11,6 +11,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.*;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.input.Mouse;
 import java.util.stream.*;
 
 public class AimbotModule {
@@ -26,6 +27,7 @@ public class AimbotModule {
     public  int              ballisticTicks   = 4;
     public  float            corrDecay        = 0.42f;
     public  int              corrLoops        = 2;
+    public  float            missChance       = 0.07f;
 
     private final Random     RNG = new Random();
     private final Minecraft  mc  = Minecraft.getMinecraft();
@@ -49,6 +51,7 @@ public class AimbotModule {
         GCDFix.seed(mc.gameSettings.mouseSensitivity);
         if (e.phase != TickEvent.Phase.END) return;
         if (!enabled) { currentTarget = null; return; }
+        if (!Mouse.isButtonDown(0)) { currentTarget = null; RotationMath.resetOU(); inCorrectionPhase = false; return; }
         if (!Mouse.isButtonDown(0)) { currentTarget = null; RotationMath.resetOU(); inCorrectionPhase = false; return; }
 
         EntityLivingBase target = findTarget();
