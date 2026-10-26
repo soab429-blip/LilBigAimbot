@@ -11,11 +11,16 @@ public class ClickGui extends GuiScreen {
 
     private int winX = 50, winY = 50;
     private int winW = 220;
-    private boolean dragging  = false;
+    private boolean dragging = false;
     private int dragOffX, dragOffY;
-    private int activeSlider  = -1;
+    private int activeSlider = -1;
 
     private final Minecraft mc = Minecraft.getMinecraft();
+
+    private boolean mouseDown() {
+        try { return Mouse.isButtonDown(0); }
+        catch (Exception e) { return false; }
+    }
 
     @Override
     public void drawScreen(int mx, int my, float pt) {
@@ -29,6 +34,7 @@ public class ClickGui extends GuiScreen {
 
         int y = winY + 16;
 
+        // toggle
         boolean on = AimbotMod.aimbot.enabled;
         drawRect(winX + padding, y, winX + winW - padding, y + rowH,
                  on ? 0xFF0f3460 : 0xFF2d2d2d);
@@ -40,11 +46,11 @@ public class ClickGui extends GuiScreen {
         drawRect(winX + padding, y, winX + winW - padding, y + 1, 0xFF333355);
         y += 5;
 
-        y = drawSlider(mx, my, y, 0, "Smooth",
+        y = drawSlider(mx, y, 0, "Smooth",
                        AimbotMod.aimbot.smoothSpeed, 0.10f, 0.60f, padding);
-        y = drawSlider(mx, my, y, 1, "FOV   ",
+        y = drawSlider(mx, y, 1, "FOV   ",
                        AimbotMod.aimbot.fovFilter,   10f,   180f,  padding);
-        y = drawSlider(mx, my, y, 2, "Reach ",
+        y = drawSlider(mx, y, 2, "Reach ",
                        AimbotMod.aimbot.maxReach,    2.0f,  6.0f,  padding);
 
         drawRect(winX + padding, y, winX + winW - padding, y + 1, 0xFF333355);
@@ -52,14 +58,14 @@ public class ClickGui extends GuiScreen {
 
         drawString(fontRendererObj, "\u00a77Toggle: \u00a7eRIGHT ALT", winX + padding + 2, y + 2, 0xAAAAAA);
         y += rowH;
-        drawString(fontRendererObj, "\u00a77GUI:    \u00a7eINSERT",     winX + padding + 2, y + 2, 0xAAAAAA);
+        drawString(fontRendererObj, "\u00a77GUI:    \u00a7eRSHIFT",     winX + padding + 2, y + 2, 0xAAAAAA);
         y += rowH + 4;
 
         drawRect(winX + padding, y, winX + winW - padding, y + 1, 0xFF333355);
         y += 5;
 
         EntityLivingBase tgt = AimbotMod.aimbot.currentTarget;
-        if (tgt != null) {
+        if (tgt != null && mc.thePlayer != null) {
             double dist = Math.sqrt(mc.thePlayer.getDistanceSqToEntity(tgt));
             float  hp   = tgt.getHealth();
             drawString(fontRendererObj,
@@ -75,45 +81,35 @@ public class ClickGui extends GuiScreen {
                        winX + padding + 2, y + 2, 0xFFFFFF);
         }
 
-        // drag window
+        // safe mouse checks
+        boolean down = mouseDown();
+
         if (dragging) {
-            if (Mouse.isButtonDown(0)) {
-                winX = mx - dragOffX;
-                winY = my - dragOffY;
-            } else {
-                dragging = false;
-            }
+            if (down) { winX = mx - dragOffX; winY = my - dragOffY; }
+            else       { dragging = false; }
         }
 
-        // drag active slider
         if (activeSlider >= 0) {
-            if (Mouse.isButtonDown(0)) {
-                applySliderDrag(mx, activeSlider, padding);
-            } else {
-                activeSlider = -1;
-            }
+            if (down) applySliderDrag(mx, activeSlider, padding);
+            else      activeSlider = -1;
         }
 
         super.drawScreen(mx, my, pt);
     }
 
-    private int drawSlider(int mx, int my, int y, int id, String label,
+    private int drawSlider(int mx, int y, int id, String label,
                             float val, float min, float max, int padding) {
         int barX = winX + padding;
         int barW = winW - padding * 2;
         int rowH = 14;
-        float pct   = (val - min) / (max - min);
-        int   fillW = (int)(barW * pct);
-
+        int fillW = (int)(barW * ((val - min) / (max - min)));
         drawRect(barX, y, barX + barW, y + rowH, 0xFF222244);
         drawRect(barX, y, barX + fillW, y + rowH, 0xFF1a5fa8);
-
         String fmt = (max <= 10f)
             ? String.format("%.2f", val)
             : String.format("%.0f", val);
         drawString(fontRendererObj, "\u00a77" + label + ": \u00a7f" + fmt,
                    barX + 3, y + 3, 0xFFFFFF);
-
         return y + rowH + 2;
     }
 
@@ -130,12 +126,11 @@ public class ClickGui extends GuiScreen {
 
     @Override
     protected void mouseClicked(int mx, int my, int btn) throws IOException {
-        int padding     = 6;
-        int rowH        = 14;
-        int toggleY     = winY + 16;
+        int padding      = 6;
+        int rowH         = 14;
+        int toggleY      = winY + 16;
         int sliderStartY = toggleY + rowH + 4 + 5;
 
-        // toggle
         if (btn == 0
                 && mx >= winX + padding && mx <= winX + winW - padding
                 && my >= toggleY && my <= toggleY + rowH) {
@@ -143,7 +138,6 @@ public class ClickGui extends GuiScreen {
             return;
         }
 
-        // sliders
         for (int i = 0; i < 3; i++) {
             int sy = sliderStartY + i * (rowH + 2);
             if (btn == 0
@@ -155,7 +149,6 @@ public class ClickGui extends GuiScreen {
             }
         }
 
-        // titlebar drag
         if (btn == 0 && my >= winY && my <= winY + 13) {
             dragging = true;
             dragOffX = mx - winX;
