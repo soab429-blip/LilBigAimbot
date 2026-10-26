@@ -19,6 +19,11 @@ public class AimbotModule {
     public  float            fovFilter     = 180f, maxReach = 3.5f;
 
     public float             smoothSpeed, deadzoneAngle, missChance, eyeOffsetMul;
+    public long              reactionDelayMax  = 250L;
+    public float             ballisticPower    = 1.9f;
+    public int               ballisticTicks    = 4;
+    public float             corrDecay         = 0.42f;
+    public int               corrLoops         = 2;
     private long             attackDelayBase, attackDelayVar, lastAttack = 0L;
 
     private final Random     RNG           = new Random();
@@ -51,7 +56,7 @@ public class AimbotModule {
         missChance       = 0.06f + RNG.nextFloat() * 0.08f;
         eyeOffsetMul     = 0.65f + RNG.nextFloat() * 0.35f;
         // reaction delay: log-normal 150-250ms (phase 1)
-        reactionDelayMs  = 150L  + (long)(RNG.nextFloat() * 100L);
+        reactionDelayMs  = 150L + (long)(RNG.nextFloat() * (reactionDelayMax - 150L));
     }
 
     @SubscribeEvent
@@ -76,7 +81,7 @@ public class AimbotModule {
             lastTarget         = target;
             targetAcquiredAt   = System.currentTimeMillis();
             rollEngagementParams();
-            RotationMath.seedOvershoot();
+            RotationMath.seedOvershoot(ballisticPower, ballisticTicks, corrDecay, corrLoops);
             inCorrectionPhase    = false;
             correctionHoldTicks  = 0;
             microPauseTicks      = 0;

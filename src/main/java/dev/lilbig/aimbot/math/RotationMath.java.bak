@@ -1,0 +1,22 @@
+package dev.lilbig.aimbot.math;
+import java.util.Random;
+public final class RotationMath {
+    public  static final float MAX_YAW_TICK   = 19.5f;
+    public  static final float MAX_PITCH_TICK = 13.5f;
+    private static float ouYaw=0f,ouPitch=0f;
+    private static final float OU_THETA=0.18f,OU_SIGMA=0.0045f;
+    private static boolean overshotYaw=false,overshotPitch=false;
+    private static float overshootYMag=0f,overshootPMag=0f;
+    private static final Random RNG=new Random();
+    private RotationMath(){}
+    public static float angleDiff(float a,float b){float d=a-b;while(d<-180f)d+=360f;while(d>180f)d-=360f;return d;}
+    private static float bezierT(float t){return t*t*(3f-2f*t);}
+    public static float bezierStep(float cur,float tgt,float spd){float d=angleDiff(tgt,cur);float aD=Math.abs(d);float dT=Math.min(aD/40f,1f);float e=spd*(0.40f+0.60f*bezierT(dT));float n=(RNG.nextFloat()-0.5f)*0.008f;float s=d*(e+n);float c=MAX_YAW_TICK+RNG.nextFloat()*2f;if(Math.abs(s)>c)s=Math.signum(s)*c;return cur+s;}
+    public static float[] ouStep(){ouYaw+=-OU_THETA*ouYaw+OU_SIGMA*(float)RNG.nextGaussian();ouPitch+=-OU_THETA*ouPitch+OU_SIGMA*(float)RNG.nextGaussian();float sY=(RNG.nextFloat()<0.03f)?(RNG.nextFloat()-0.5f)*0.018f:0f;float sP=(RNG.nextFloat()<0.025f)?(RNG.nextFloat()-0.5f)*0.012f:0f;return new float[]{ouYaw+sY,ouPitch+sP};}
+    public static void seedOvershoot(){overshotYaw=RNG.nextFloat()<0.60f;overshotPitch=RNG.nextFloat()<0.45f;overshootYMag=0.4f+RNG.nextFloat()*1.6f;overshootPMag=0.2f+RNG.nextFloat()*0.8f;}
+    public static float burnOvershootYaw(float b){if(!overshotYaw||overshootYMag<=0f){overshotYaw=false;return b;}float s=(RNG.nextFloat()<0.5f)?1f:-1f;float k=s*Math.min(overshootYMag,0.55f);overshootYMag=Math.max(0f,overshootYMag-0.55f);return b+k;}
+    public static float burnOvershootPitch(float b){if(!overshotPitch||overshootPMag<=0f){overshotPitch=false;return b;}float s=(RNG.nextFloat()<0.5f)?1f:-1f;float k=s*Math.min(overshootPMag,0.35f);overshootPMag=Math.max(0f,overshootPMag-0.35f);return b+k;}
+    public static float[] clampDelta(float nY,float nP,float lY,float lP){float dy=angleDiff(nY,lY);float dp=angleDiff(nP,lP);float cY=MAX_YAW_TICK+RNG.nextFloat()*1.5f;float cP=MAX_PITCH_TICK+RNG.nextFloat()*1f;if(Math.abs(dy)>cY)dy=Math.signum(dy)*cY;if(Math.abs(dp)>cP)dp=Math.signum(dp)*cP;return new float[]{lY+dy,lP+dp};}
+    public static float[] injectJitter(float y,float p){float[] o=ouStep();return new float[]{y+o[0],p+o[1]};}
+    public static void resetOU(){ouYaw=0f;ouPitch=0f;}
+}

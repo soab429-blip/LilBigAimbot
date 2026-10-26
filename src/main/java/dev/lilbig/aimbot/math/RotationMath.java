@@ -18,6 +18,8 @@ public final class RotationMath {
     private static float overshootY = 0f, overshootP = 0f;
     private static float corrAmpY   = 0f, corrAmpP   = 0f;
     private static int   corrLeft   = 0;
+    private static float AMP_DECAY_DYN = 0.42f;
+    private static int   MAX_CORR_DYN  = 2;
     private static final float AMP_DECAY = 0.42f;
 
     // ── ballistic phase state (phase 2) ──────────────────────────────────────
@@ -41,11 +43,13 @@ public final class RotationMath {
     // seedOvershoot — called on new target lock
     // arms ballistic sweep + plants first overshoot amplitude
     // ─────────────────────────────────────────────────────────────────────────
-    public static void seedOvershoot() {
+    public static void seedOvershoot(float bPower, int bTicks, float decay, int loops) {
+        AMP_DECAY_DYN = decay;
+        MAX_CORR_DYN  = loops;
         // phase 2 seed: 3-5 tick arm throw, speed 1.6-2.2x normal
         inBallistic  = true;
-        ballisticTTL = 3f + RNG.nextFloat() * 2f;
-        ballisticMul = 1.6f + RNG.nextFloat() * 0.6f;
+        ballisticTTL = bTicks * 0.7f + RNG.nextFloat() * bTicks * 0.3f;
+        ballisticMul = bPower * (0.85f + RNG.nextFloat() * 0.15f);
 
         // phase 5 seed: first overshoot is 8-18% of remaining delta
         // AimbotModule will call burnOvershoot* after bezier lands
@@ -53,7 +57,7 @@ public final class RotationMath {
         overshootP = overshootY * (0.4f + RNG.nextFloat() * 0.3f);
         corrAmpY   = overshootY;
         corrAmpP   = overshootP;
-        corrLeft   = 2 + RNG.nextInt(2); // 2 or 3 damped loops
+        corrLeft = MAX_CORR_DYN; // 2 or 3 damped loops
     }
 
     // ─────────────────────────────────────────────────────────────────────────
