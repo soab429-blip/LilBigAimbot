@@ -18,12 +18,12 @@ public class AimbotModule {
     public  boolean          enabled       = false;
     public  float            fovFilter     = 180f, maxReach = 3.5f;
 
-    private float            smoothSpeed, deadzoneAngle, missChance, eyeOffsetMul;
+    public float             smoothSpeed, deadzoneAngle, missChance, eyeOffsetMul;
     private long             attackDelayBase, attackDelayVar, lastAttack = 0L;
 
     private final Random     RNG           = new Random();
     private final Minecraft  mc            = Minecraft.getMinecraft();
-    private       EntityLivingBase currentTarget = null;
+    public  EntityLivingBase currentTarget = null;
     private       EntityLivingBase lastTarget    = null;
 
     // ── reaction delay state (phase 1) ───────────────────────────────────────
