@@ -6,7 +6,8 @@ import net.minecraftforge.fml.common.gameevent.InputEvent;
 import org.lwjgl.input.Keyboard;
 
 public class KeyBindHandler {
-    private static final int TOGGLE_KEY = Keyboard.KEY_RALT;
+    // 184 = RIGHT ALT raw keycode
+    private static final int TOGGLE_KEY = 184;
     public void register() {}
 
     @SubscribeEvent
