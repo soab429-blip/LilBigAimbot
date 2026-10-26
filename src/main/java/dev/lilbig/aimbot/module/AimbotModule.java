@@ -10,6 +10,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.*;
+import org.lwjgl.input.Mouse;
 import java.util.stream.*;
 
 public class AimbotModule {
@@ -48,6 +49,7 @@ public class AimbotModule {
         GCDFix.seed(mc.gameSettings.mouseSensitivity);
         if (e.phase != TickEvent.Phase.END) return;
         if (!enabled) { currentTarget = null; return; }
+        if (!Mouse.isButtonDown(0)) { currentTarget = null; RotationMath.resetOU(); inCorrectionPhase = false; return; }
 
         EntityLivingBase target = findTarget();
         currentTarget = target;
